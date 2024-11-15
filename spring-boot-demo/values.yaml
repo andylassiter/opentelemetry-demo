@@ -1,0 +1,107 @@
+
+env:
+  - name: OTEL_SERVICE_NAME
+    value: "spring-boot-demo"
+#  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+#    value: "http://spring-boot-demo-opentelemetry-collector:4318"
+#  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+#    value: "http://spring-boot-demo-prometheus-server:9090/api/v1/otlp/v1/metrics"
+  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/metrics"
+  - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/traces"
+  - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/logs"
+
+image:
+  repository: awlassit/spring-boot-demo
+  pullPolicy: IfNotPresent
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 8080
+
+opentelemetry-collector:
+  enabled: true
+  image:
+    repository: otel/opentelemetry-collector
+    pullPolicy: IfNotPresent
+  mode: deployment
+  nameOverride: opentelemetry-collector
+  config:
+    exporters:
+      otlp/jaeger:
+        endpoint: 'spring-boot-demo-jaeger-collector:4317'
+        tls:
+          insecure: true
+      otlphttp/prometheus:
+        endpoint: 'http://spring-boot-demo-prometheus-server:9090/api/v1/otlp'
+        tls:
+          insecure: true
+      debug:
+        verbosity: detailed
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch, memory_limiter]
+          exporters: [debug, otlp/jaeger]
+        metrics:
+          receivers: [otlp]
+          processors: [batch, memory_limiter]
+          exporters: [debug, otlphttp/prometheus]
+        logs:
+          receivers: [otlp]
+          processors: [batch, memory_limiter]
+          exporters: [debug]
+
+jaeger:
+  enabled: true
+  provisionDataStore:
+    cassandra: false
+  allInOne:
+    enabled: true
+    args:
+      - "--memory.max-traces=5000"
+      - "--query.base-path=/jaeger/ui"
+      - "--prometheus.server-url=http://spring-boot-demo-prometheus-server:9090"
+      - "--prometheus.query.normalize-calls=true"
+      - "--prometheus.query.normalize-duration=true"
+    extraEnv:
+      - name: METRICS_STORAGE_TYPE
+        value: prometheus
+      - name: COLLECTOR_OTLP_GRPC_HOST_PORT
+        value: 0.0.0.0:4317
+      - name: COLLECTOR_OTLP_HTTP_HOST_PORT
+        value: 0.0.0.0:4318
+    resources:
+      limits:
+        memory: 400Mi
+  storage:
+    type: memory
+  agent:
+    enabled: false
+  collector:
+    enabled: false
+  query:
+    enabled: false
+
+prometheus:
+  enabled: true
+  alertmanager:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+
+  server:
+    extraFlags:
+      - "enable-feature=otlp-write-receiver"
+    service:
+      servicePort: 9090
+
+
