@@ -28,10 +28,6 @@ dependencies:
     version: "25.30.0"
     repository: https://prometheus-community.github.io/helm-charts
     condition: prometheus.enabled
-  - name: opentelemetry-collector
-    version: 0.109.0
-    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
-    condition: opentelemetry-collector.enabled
   - name: jaeger
     version: 3.3.2
     repository: https://jaegertracing.github.io/helm-charts

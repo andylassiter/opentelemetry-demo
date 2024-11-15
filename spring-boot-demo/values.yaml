@@ -1,17 +1,14 @@
-
 env:
   - name: OTEL_SERVICE_NAME
     value: "spring-boot-demo"
-#  - name: OTEL_EXPORTER_OTLP_ENDPOINT
-#    value: "http://spring-boot-demo-opentelemetry-collector:4318"
-#  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-#    value: "http://spring-boot-demo-prometheus-server:9090/api/v1/otlp/v1/metrics"
   - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/metrics"
+    value: "http://spring-boot-demo-prometheus-server:9090/api/v1/otlp/v1/metrics"
   - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/traces"
-  - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/logs"
+    value: "http://spring-boot-demo-jaeger-collector:4318/v1/traces"
+#  - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+#    value: "http://spring-boot-demo-opentelemetry-collector:4318/v1/logs"
+  - name: OTEL_LOGS_EXPORTER
+    value: "none"
 
 image:
   repository: awlassit/spring-boot-demo
@@ -21,40 +18,6 @@ image:
 service:
   type: ClusterIP
   port: 8080
-
-opentelemetry-collector:
-  enabled: true
-  image:
-    repository: otel/opentelemetry-collector
-    pullPolicy: IfNotPresent
-  mode: deployment
-  nameOverride: opentelemetry-collector
-  config:
-    exporters:
-      otlp/jaeger:
-        endpoint: 'spring-boot-demo-jaeger-collector:4317'
-        tls:
-          insecure: true
-      otlphttp/prometheus:
-        endpoint: 'http://spring-boot-demo-prometheus-server:9090/api/v1/otlp'
-        tls:
-          insecure: true
-      debug:
-        verbosity: detailed
-    service:
-      pipelines:
-        traces:
-          receivers: [otlp]
-          processors: [batch, memory_limiter]
-          exporters: [debug, otlp/jaeger]
-        metrics:
-          receivers: [otlp]
-          processors: [batch, memory_limiter]
-          exporters: [debug, otlphttp/prometheus]
-        logs:
-          receivers: [otlp]
-          processors: [batch, memory_limiter]
-          exporters: [debug]
 
 jaeger:
   enabled: true
