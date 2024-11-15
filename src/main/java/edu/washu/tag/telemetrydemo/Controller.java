@@ -54,7 +54,7 @@ public class Controller {
     }
 
     @GetMapping("/pizza")
-    public String pizza() throws InterruptedException {
+    public String pizza() throws InterruptedException, OutOfToppingException, BurntPizzaException {
         long startTime = System.currentTimeMillis();
         Span span = tracer.spanBuilder("pizza").startSpan();
         try (Scope scope = span.makeCurrent()) {
@@ -82,9 +82,12 @@ public class Controller {
         }
     }
 
-    private void addToppings() throws InterruptedException {
+    private void addToppings() throws InterruptedException, OutOfToppingException {
         Span span = tracer.spanBuilder("addToppings").startSpan();
         try (Scope scope = span.makeCurrent()) {
+            if (random.nextInt(10) < 1) { // 10% chance to throw OutOfToppingException
+                throw new OutOfToppingException("Ran out of toppings!");
+            }
             Thread.sleep(random.nextInt(100));
             LOGGER.info("Toppings are added");
         } finally {
@@ -92,9 +95,12 @@ public class Controller {
         }
     }
 
-    private void bakePizza() throws InterruptedException {
+    private void bakePizza() throws InterruptedException, BurntPizzaException {
         Span span = tracer.spanBuilder("bakePizza").startSpan();
         try (Scope scope = span.makeCurrent()) {
+            if (random.nextInt(10) < 1) { // 10% chance to throw BurntPizzaException
+                throw new BurntPizzaException("Pizza is burnt!");
+            }
             Thread.sleep(random.nextInt(100));
             LOGGER.info("Pizza is baked");
         } finally {
@@ -102,4 +108,16 @@ public class Controller {
         }
     }
 
+}
+
+class OutOfToppingException extends Exception {
+    public OutOfToppingException(String message) {
+        super(message);
+    }
+}
+
+class BurntPizzaException extends Exception {
+    public BurntPizzaException(String message) {
+        super(message);
+    }
 }
