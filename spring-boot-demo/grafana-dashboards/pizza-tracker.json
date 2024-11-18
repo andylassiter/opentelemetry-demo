@@ -362,6 +362,46 @@
       ],
       "title": "Pizza Fails",
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "webstore-logs"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 5,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "11.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "webstore-logs"
+          },
+          "expr": "{service_name=`spring-boot-demo`} | json | logfmt | drop __error__, __error_details__",
+          "refId": "logs"
+        }
+      ],
+      "title": "Logs",
+      "type": "logs"
     }
   ],
   "preload": false,
