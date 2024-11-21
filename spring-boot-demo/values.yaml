@@ -73,6 +73,12 @@ prometheus:
     service:
       servicePort: 9090
 
+  extraScrapeConfigs: |
+    - job_name: 'loki'
+      static_configs:
+        - targets: ['spring-boot-demo-loki:3100']
+    
+
 grafana:
   enabled: true
   grafana.ini:
